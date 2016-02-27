@@ -17,7 +17,7 @@ angular.module('typeahead-focus', [])
 
           // Array of keyCode values for arrow keys
           const ARROW_KEYS = [37,38,39,40];
-          
+
           // keyCodes for tab, enter & esc
           const HOT_KEYS = [9, 13, 27];
 
@@ -28,7 +28,7 @@ angular.module('typeahead-focus', [])
              */
             if( ARROW_KEYS.indexOf(e.keyCode) >= 0 )
               return;
-            
+
             // stop executing when we already have a value and "hot key" pressed
             // to allow normal behaviour like moving to next input field
             if (ngModel.$viewValue && HOT_KEYS.indexOf(e.keyCode) >= 0) {
@@ -57,11 +57,35 @@ angular.module('typeahead-focus', [])
 
           //compare function that treats the empty space as a match
           scope.$emptyOrMatch = function (actual, expected) {
-            if (expected == ' ') {
+            if (expected === ' ') {
               return true;
             }
-            return actual ? actual.toString().toLowerCase().indexOf(expected.toLowerCase()) > -1 : false;
+            return partialCaseInsensitiveMatch(actual, expected);
           };
+
+          // Angular's default partial match comparator implementation
+          function partialCaseInsensitiveMatch(actual, expected) {
+            if (angular.isUndefined(actual)) {
+              // No substring matching against `undefined`
+              return false;
+            }
+            if ((actual === null) || (expected === null)) {
+              // No substring matching against `null`; only match against `null`
+              return actual === expected;
+            }
+            if (angular.isObject(expected) || (angular.isObject(actual) && !hasCustomToString(actual))) {
+              // Should not compare primitives against objects, unless they have custom `toString` method
+              return false;
+            }
+
+            actual = angular.lowercase('' + actual);
+            expected = angular.lowercase('' + expected);
+            return actual.indexOf(expected) !== -1;
+          }
+
+          function hasCustomToString(obj) {
+            return angular.isFunction(obj.toString) && obj.toString !== Object.prototype.toString;
+          }
         }
       };
     });
